@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView allTime;
     private TextView timer;
     private TextView speed;
-    private Handler handler;
+    private  static  Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,12 +81,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 timer.setText("3s定时已结束");
                                 count = 3;
                                 isEnd = false;
-                                try {
-                                    Thread.sleep(200);
-                                    timer.setText("3s定时");
-                                }catch (Exception e){
-                                    e.printStackTrace();
-                                }
                             }else {
                                 timer.setText(String.valueOf(count)+"s后停止");
                             }
