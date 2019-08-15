@@ -11,17 +11,22 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.music.Service.MusicService;
 
 import java.text.SimpleDateFormat;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+
+    private int count = 3;
+    private boolean isEnd = false;
 
     private Handler mHandler = new Handler();
 
@@ -42,23 +47,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Intent MediaServiceIntent;
     private TextView nowTime;
     private TextView allTime;
+    private TextView timer;
+    private TextView speed;
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        play = findViewById(R.id.play);
-        img = findViewById(R.id.img);
-        reset = findViewById(R.id.reset);
-        nowTime = findViewById(R.id.now_time);
-        allTime = findViewById(R.id.all_time);
-        //监听滚动条事件
-        seekBar = (SeekBar) findViewById(R.id.seek_bar);
-
-
-        play.setOnClickListener(this);
-        reset.setOnClickListener(this);
+        init();
 
         mCircleAnimator = ObjectAnimator.ofFloat(img, "rotation", 0.0f, 360.0f);
         mCircleAnimator.setDuration(3000);//转一圈的时间
@@ -67,10 +65,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCircleAnimator.setRepeatMode(ObjectAnimator.RESTART);//重复模式 在重复次数>=0时生效
 
         MediaServiceIntent = new Intent(this, MusicService.class);
+        MediaServiceIntent.putExtra("aaa","qwer");//可以传一些数据
 
         bindService(MediaServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
+        handler = new Handler(){
+                public void handleMessage(Message message){
+                    switch (message.what){
+                        case 0:
+                            if (count == 0){
+                                mMyBinder.stop();
+                                mCircleAnimator.end();
+                                isImg = false;
+                                play.setText("播放");
+                                timer.setText("3s定时已结束");
+                                count = 3;
+                                isEnd = false;
+                                try {
+                                    Thread.sleep(200);
+                                    timer.setText("3s定时");
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }else {
+                                timer.setText(String.valueOf(count)+"s后停止");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+        };
+
     }
+
+    private void init() {
+        play = findViewById(R.id.play);
+        img = findViewById(R.id.img);
+        reset = findViewById(R.id.reset);
+        timer = findViewById(R.id.timer);
+        speed = findViewById(R.id.speed);
+        nowTime = findViewById(R.id.now_time);
+        allTime = findViewById(R.id.all_time);
+        //监听滚动条事件
+        seekBar = (SeekBar) findViewById(R.id.seek_bar);
+
+
+        play.setOnClickListener(this);
+        reset.setOnClickListener(this);
+        timer.setOnClickListener(this);
+        speed.setOnClickListener(this);
+    }
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -148,7 +195,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                //启动服务
 //                startService(intent);
                 break;
-
+            case R.id.timer:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (!isEnd){
+                            try {
+                                Thread.sleep(1000);
+                                count -- ;
+                                if (count < 1){
+                                    isEnd = true;
+                                }
+                                Message msg = new Message();
+                                msg.what = 0;
+                                handler.sendMessage(msg);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
+//                mMyBinder.timer();
+//                mCircleAnimator.end();
+//                isImg = false;
+//                play.setText("播放");
+                break;
+            case R.id.speed:
+                mMyBinder.speed();
+                break;
         }
     }
 

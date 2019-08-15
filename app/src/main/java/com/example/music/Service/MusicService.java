@@ -4,8 +4,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.example.music.MainActivity;
 import com.example.music.R;
 
 
@@ -18,6 +22,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private static final String START = "start";
     private static final String STOP = "stop";
     private static final String PAUSE = "pause";
+    private String flg;
 
     public MusicService() {
 
@@ -25,6 +30,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public IBinder onBind(Intent intent) {
+        flg = intent.getStringExtra("aaa");
+        Log.d("aaa", "onBind: "+ flg);
         return myBinder;
     }
 
@@ -78,6 +85,33 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             mediaPlayer.seekTo(msec);
         }
 
+        public void speed(){
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                //倍速设置，必须在23以上
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Toast.makeText(MusicService.this, "1.5倍加速", Toast.LENGTH_SHORT).show();
+                    mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(1.5f));
+                    mediaPlayer.pause();
+                    mediaPlayer.start();
+                } else {
+                    Toast.makeText(MusicService.this, "对不起请升级手机系统至Android6.0及以上", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        public void timer(){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                        stop();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
     }
 
     @Override
@@ -96,7 +130,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 //    @Override
 //    public int onStartCommand(Intent intent, int flags, int startId) {
 //        //获得intent中携带的标记
-//        String flg = intent.getStringExtra("flg");
+//        String flg = intent.getStringExtra("aaa");
+//        Log.d("aaa", "onStartCommand: "+flg);
 //        switch (flg){
 //            case START:
 //                if (mediaPlayer != null){
