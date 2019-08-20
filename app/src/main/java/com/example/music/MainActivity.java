@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView timer;
     private TextView speed;
     private  static  Handler handler;
+    private Thread myThread = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 play.setText("播放");
                                 timer.setText("3s定时已结束");
                                 count = 3;
-                                isEnd = false;
                             }else {
                                 timer.setText(String.valueOf(count)+"s后停止");
                             }
@@ -190,25 +190,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                startService(intent);
                 break;
             case R.id.timer:
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (!isEnd){
-                            try {
-                                Thread.sleep(1000);
-                                count -- ;
-                                if (count < 1){
-                                    isEnd = true;
+                    myThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            while (!isEnd) {
+                                try {
+                                    Thread.sleep(1000);
+                                    count--;
+                                    if (count < 1) {
+                                        isEnd = true;
+                                    }
+                                    Message msg = new Message();
+                                    msg.what = 0;
+                                    handler.sendMessage(msg);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                                Message msg = new Message();
-                                msg.what = 0;
-                                handler.sendMessage(msg);
-                            }catch (Exception e){
-                                e.printStackTrace();
                             }
                         }
-                    }
-                }).start();
+                    });
+                    myThread.start();
 //                mMyBinder.timer();
 //                mCircleAnimator.end();
 //                isImg = false;
